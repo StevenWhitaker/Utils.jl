@@ -1,0 +1,4 @@
+name = "Utils.jl"
+uuid = "48516110-8ead-11e9-2aff-5df21ad4540f"
+authors = ["Steven Whitaker <stwhit@umich.edu>"]
+version = "0.1.0"
