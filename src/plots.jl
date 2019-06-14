@@ -22,7 +22,8 @@ function myplot(x::AbstractArray{<:Union{<:Real,<:AbstractArray{<:Real,1}},1};
     idx = x[1] isa Real ? 1:length(x) : [1:length(x[i]) for i = 1:length(x)],
     label = x[1] isa Real ? "" : ["$i" for i = 1:length(x)],
     line = (:dash, 2.5),
-    marker = (:circle, 7)
+    marker = (:circle, 7),
+    kwargs...
 )
 
     return plot(idx, x,
@@ -30,15 +31,6 @@ function myplot(x::AbstractArray{<:Union{<:Real,<:AbstractArray{<:Real,1}},1};
                 line = line,
                 marker = marker;
                 kwargs...)
-
-end
-
-myplot(idx, x; kwargs...) = myplot(x, idx = idx; kwargs...)
-
-function myplot(x::AbstractArray{<:Union{<:Complex,<:AbstractArray{<:Complex,1}},1}; kwargs...)
-
-    @warn("taking magnitude of complex input")
-    myplot(map(z -> abs.(z), x); kwargs...)
 
 end
 
@@ -53,10 +45,124 @@ Date Created: 2019-06-14
     myplot([x, y,] img; kwargs...)
 
 Create image of `img` with preferred default values.
+
+# Arguments
+- `x::AbstractArray = 1:size(img,1)`: x locations of data points
+- `y::AbstractArray = 1:size(img,2)`: y locations of data points
+- `img::AbstractArray{<:Number,2}`: 2D data to plot
+- `kwargs...`: Keyword arguments passed to `Plots.heatmap`
+
+# Return
+- `p::Plots.Plot{<:AbstractBackend}`: Plot handle
 """
-function myplot(x::AbstractArray{<:Real,2})
+function myplot(img::AbstractArray{<:Real,2};
+    x = 1:size(img,1),
+    y = 1:size(img,2),
+    color = :grays,
+    xticks = [minimum(x), maximum(x)],
+    yticks = [minimum(y), maximum(y)],
+    aspect_ratio = :equal,
+    yflip = true,
+    kwargs...
+)
+
+    return heatmap(x, y, transpose(img),
+                   color = color,
+                   xticks = xticks,
+                   yticks = yticks,
+                   aspect_ratio = aspect_ratio,
+                   yflip = yflip;
+                   kwargs...)
+
+end
+
+"""
+Author: Steven Whitaker
+
+Institution: University of Michigan
+
+Date Created: 2019-06-14
 
 
+    myplot([x, y, z], img; combine, ncols, npad, kwargs...)
+
+Create image of 3D `img` with preferred default values.
+
+# Arguments
+- `x::AbstractArray = 1:size(img,1)`: x locations of data points
+- `y::AbstractArray = 1:size(img,2)`: y locations of data points
+- `z::AbstractArray = 1:size(img,3)`: z locations of data points
+- `img::AbstractArray{<:Number,3}`: 3D data to plot
+- `combine::Bool = true`: Whether to create one big 2D image or `length(z)`
+    individual 2D images
+- `ncols::Integer`: Number of columns of 2D images to display
+- `npad::Integer`: Number of pixels of padding between 2D images (only used when
+    `combine` is `true`)
+- `kwargs...`: Keyword arguments passed to `Plots.heatmap`
+
+# Return
+- `p::Plots.Plot{<:AbstractBackend}`: Plot handle
+"""
+function myplot(img::AbstractArray{<:Real,3};
+    x = 1:size(img,1),
+    y = 1:size(img,2),
+    z = 1:size(img,3),
+    combine = true,
+    ncols = Int(floor(sqrt(length(z)))),
+    npad = 1,
+    xlabel = combine ? "" : ["z = $i" for i in z],
+    clims = combine ? (minimum(img), maximum(img)) : [(minimum(img[:,:,iz]), maximum(img[:,:,iz])) for iz = 1:size(img,3)],
+    xticks = [minimum(x), maximum(x)],
+    yticks = [minimum(y), maximum(y)],
+    kwargs...
+)
+
+    (nx, ny, nz) = size(img)
+
+    # Compute the number of rows of 2D images to display
+    nrows = Int(ceil(nz / ncols))
+
+    if combine
+        img2d = clims[1] * ones(eltype(img), nx * ncols + npad * (ncols - 1), ny * nrows + npad * (nrows - 1))
+        for r = 1:nrows, c = 1:ncols
+            iz = (r - 1) * ncols + c
+            if iz > nz
+                break
+            end
+            startx = 1 + (c - 1) * (nx + npad)
+            endx = startx - 1 + nx
+            starty = 1 + (r - 1) * (ny + npad)
+            endy = starty - 1 + ny
+            img2d[startx:endx,starty:endy] = img[:,:,iz]
+        end
+        dx = x[2] - x[1]
+        dy = y[2] - y[1]
+        newx = cat(dims = 1, [x + (c - 1) * (x[end] - x[1] + dx) for c = 1:ncols]...)
+        newy = cat(dims = 1, [y + (r - 1) * (y[end] - y[1] + dy) for r = 1:nrows]...)
+        p = myplot(img2d, xlabel = xlabel, clims = clims, xticks = xticks,
+                   yticks = yticks, x = newx, y = newy; kwargs...)
+    else
+        plots = [myplot(img[:,:,iz], x = x, y = y, xlabel = xlabel[iz],
+                        clims = clims[iz], xticks = xticks, yticks = yticks;
+                        kwargs...) for iz = 1:nz]
+        p = plot(plots...)
+    end
+
+    return p
+
+end
+
+myplot(idx, x; kwargs...) = myplot(x, idx = idx; kwargs...)
+
+myplot(x, y, img; kwargs...) = myplot(img, x = x, y = y; kwargs...)
+
+myplot(x, y, z, img; kwargs...) = myplot(img, x = x, y = y, z = z; kwargs...)
+
+function myplot(x::Union{<:AbstractArray{<:Union{<:Complex,<:AbstractArray{<:Complex,1}},1},
+                         <:AbstractArray{<:Complex,2}, <:AbstractArray{<:Complex,3}}; kwargs...)
+
+    @warn("taking magnitude of complex input")
+    myplot(map(z -> abs.(z), x); kwargs...)
 
 end
 
