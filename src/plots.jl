@@ -19,7 +19,7 @@ Create plot of `x` with preferred default values.
 - `p::Plots.Plot{<:AbstractBackend}`: Plot handle
 """
 function myplot(x::AbstractArray{<:Union{<:Real,<:AbstractArray{<:Real,1}},1};
-    idx = x[1] isa Real ? 1:length(x) : [1:length(x[i]) for i = 1:length(x)],
+    idx = x[1] isa Real ? (1:length(x)) : [1:length(x[i]) for i = 1:length(x)],
     label = x[1] isa Real ? "" : ["$i" for i = 1:length(x)],
     line = (:dash, 2.5),
     marker = (:circle, 7),
@@ -137,15 +137,17 @@ function myplot(img::AbstractArray{<:Real,3};
         end
         dx = x[2] - x[1]
         dy = y[2] - y[1]
-        newx = cat(dims = 1, [x + (c - 1) * (x[end] - x[1] + dx) for c = 1:ncols]...)
-        newy = cat(dims = 1, [y + (r - 1) * (y[end] - y[1] + dy) for r = 1:nrows]...)
+        newx = cat(dims = 1, x, [[x[1]-npad*dx:dx:x[1]-dx; x] .+ (c - 1) * (x[end] - x[1] + dx * (npad + 1)) for c = 2:ncols]...)
+        newy = cat(dims = 1, y, [[y[1]-npad*dy:dy:y[1]-dy; y] .+ (r - 1) * (y[end] - y[1] + dy * (npad + 1)) for r = 2:nrows]...)
         p = myplot(img2d, xlabel = xlabel, clims = clims, xticks = xticks,
                    yticks = yticks, x = newx, y = newy; kwargs...)
     else
-        plots = [myplot(img[:,:,iz], x = x, y = y, xlabel = xlabel[iz],
-                        clims = clims[iz], xticks = xticks, yticks = yticks;
-                        kwargs...) for iz = 1:nz]
-        p = plot(plots...)
+        # Plots.jl is kind of finnicky sometimes in this setting...
+        plots = [[myplot(img[:,:,iz], x = x, y = y, xlabel = xlabel[iz],
+                         clims = clims[iz], xticks = xticks, yticks = yticks;
+                         kwargs...) for iz = 1:nz];
+                 [plot(framestyle = :none) for n = nz+1:ncols*nrows]]
+        p = plot(plots..., layout = (nrows, ncols))
     end
 
     return p
@@ -163,6 +165,54 @@ function myplot(x::Union{<:AbstractArray{<:Union{<:Complex,<:AbstractArray{<:Com
 
     @warn("taking magnitude of complex input")
     myplot(map(z -> abs.(z), x); kwargs...)
+
+end
+
+function myplot(test::Symbol)
+
+    if test == :test1d1
+
+        x = randn(10)
+        idx = rand(10)
+        display(myplot(idx, x))
+
+    elseif test == :test1d2
+
+        x = [rand(10), randn(100)]
+        display(myplot(x))
+
+    elseif test == :test2d1
+
+        img = [x + y for x = 1:100, y = zeros(150)]
+        display(myplot(img))
+
+    elseif test == :test3d1
+
+        img = cat(dims = 3, [z * ones(150,125) for z = 1:10]...)
+        display(myplot(img))
+
+    elseif test == :test3d2
+
+        img = cat(dims = 3, [z * ones(150,125) for z = 1:10]...)
+        x = (-75:74) / 2
+        y = (121:245) / 3
+        z = 3:12
+        display(myplot(x, y, z, img, ncols = 5, npad = 20))
+
+    elseif test == :test3d3
+
+        img = cat(dims = 3, [z * randn(150,125) for z = 1:21]...)
+        display(myplot(img, combine = false))
+
+    elseif test == :test3d4
+
+        img = cat(dims = 3, [z * randn(150,125) for z = 1:8]...)
+        x = (-75:74) / 2
+        y = (121:245) / 2
+        z = 3:10
+        display(myplot(x, y, z, img, ncols = 4, npad = 20, combine = false))
+
+    end
 
 end
 
