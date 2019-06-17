@@ -1,9 +1,10 @@
 module Utils
 
-using Plots
+using Plots: plot, heatmap, backend, plotly
+using ImageSegmentation: seeded_region_growing, labels_map
 
 include("plots.jl")
 
-export iplot
+export myplot, iplot, getroi, plotroi, segment
 
 end

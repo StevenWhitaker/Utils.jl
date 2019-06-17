@@ -303,8 +303,19 @@ function getroi(x::AbstractArray)
     high = max.(idx1, idx2)
 
     # Construct and return roi
-    roi = CartesianIndex(low...):CartesianIndex(high...)
-    return roi
+    return CartesianIndex(low...):CartesianIndex(high...)
+
+end
+
+function getroi(test::Symbol)
+
+    if test == :test1
+
+        img = [x + y for x = 1:100, y = zeros(150)]
+        roi = getroi(img)
+        display(iplot(plotroi(img, roi)))
+
+    end
 
 end
 
@@ -380,7 +391,9 @@ function plotroi(x::AbstractArray, roi::CartesianIndices;
 
     # Make sure the dimensions of x and roi match
     if length(roi[1]) != N
-        throw(DimensionMismatch("x has dimension $N, roi has dimension $(length(roi[1]))"))
+        throw(DimensionMismatch("x has dimension $N, element of roi has dimension $(length(roi[1]))"))
+    elseif ndims(roi) != N
+        throw(DimensionMismatch("x has dimension $N, roi has dimension $(ndims(roi))"))
     end
 
     # Copy x to avoid overwriting values in x
@@ -392,7 +405,7 @@ function plotroi(x::AbstractArray, roi::CartesianIndices;
     else
         s = size(roi)
         for d = 1:N
-            xcopy[roi[CartesianIndex(ones(d-1)...),:,CartesianIndex(ones(N-d)...)]] .= value
+            xcopy[roi[CartesianIndex(ones(Int,d-1)...),:,CartesianIndex(ones(Int,N-d)...)]] .= value
             xcopy[roi[CartesianIndex(s[1:d-1]),:,CartesianIndex(s[d+1:end])]] .= value
         end
     end
@@ -402,11 +415,93 @@ function plotroi(x::AbstractArray, roi::CartesianIndices;
 
 end
 
-"""
+function plotroi(test::Symbol)
+
+    if test == :test1
+
+        img = [x + y for x = 1:100, y = zeros(150)]
+        roi = CartesianIndex(5,5):CartesianIndex(20,30)
+        display(iplot(plotroi(img, roi)))
+
+    elseif test == :test2
+
+        img = [x + y for x = 1:100, y = zeros(150)]
+        roi = CartesianIndex(5,5):CartesianIndex(20,30)
+        display(iplot(plotroi(img, roi, fill = true, value = 200)))
+
+    end
+
+end
 
 """
-function segment()
+Author: Steven Whitaker
+
+Institution: University of Michigan
+
+Date Created: 2019-06-17
 
 
+    segment(img; show)
+
+Segment the given image `img`.
+
+# Arguments
+- `img::AbstractArray{<:Any,2}`: Image to segment
+- `show::Bool = false`: Whether or not to display the segmentation
+
+# Return
+- `labels::AbstractArray{Int,2}`: Map of labels (displayed if `show` is `true`)
+"""
+function segment(img::AbstractArray{<:Any,2}; show = false)
+
+    # Display img
+    display(iplot(myplot(img)))
+
+    # Create function to parse user input
+    f = input -> begin
+        out = parse.(Int, split(input))
+        if length(out) != 3
+            error("user provided $(length(out)) numbers, should provide 3")
+        else
+            return out
+        end
+    end
+
+    # Have user provide seeds for seeded_region_growing
+    println("Input the x and y coordinates and the class label (separated by " *
+            "whitespace) of each seed location. When finished, type \"q\".")
+    seeds = Array{Tuple{CartesianIndex{2},Int},1}()
+    while true
+        input = getuserinput(f)
+        if isnothing(input)
+            break
+        else
+            push!(seeds, (CartesianIndex(input[1], input[2]), input[3]))
+        end
+    end
+
+    # Segment img and return the result
+    labels = seeded_region_growing(Gray.(img), seeds).image_indexmap
+
+    # Optionally display the segmentation
+    if show
+        display(myplot(labels))
+    end
+
+    return labels
+
+end
+
+function segment(test::Symbol)
+
+    if test == :test1
+
+        img = zeros(200,200)
+        img[5:25,5:25] .= 20
+        img[30:150,30:150] .= 50
+        img[70:100,45:55] .= 10
+        labels = segment(img, show = true)
+
+    end
 
 end
