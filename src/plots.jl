@@ -272,10 +272,13 @@ Get the index for a rectangular region of interest (ROI) of `x`.
 # Return
 - `roi::CartesianIndices`: Index for ROI of `x`, i.e., `x[roi]` returns the ROI
 """
-function getroi(x::AbstractArray{<:Any,N}) where N
+function getroi(x::AbstractArray)
 
     # Display x
     display(iplot(myplot(x)))
+
+    # Compute number of dimensions of x
+    N = ndims(x)
 
     # Create function to parse user input
     f = input -> begin
@@ -344,11 +347,58 @@ function getuserinput(f::Function)
 end
 
 """
+Author: Steven Whitaker
 
+Institution: University of Michigan
+
+Date Created: 2019-06-17
+
+
+    plotroi(x, roi; fill, value, kwargs)
+
+Display the given region of interest `roi` of `x`.
+
+# Arguments
+- `x::AbstractArray`: Data for which to display the ROI
+- `roi::CartesianIndices`: ROI to display
+- `fill::Bool = false`: Whether to fill in the ROI (`true`) or show only the
+    boundary (`false`)
+- `value = 1.2maximum(x)`: Value to assign to ROI locations
+- `kwargs`: Keyword arguments passed to `myplot`
+
+# Return
+- `p::Plots.Plot{<:AbstractBackend}`: Plot handle
 """
-function plotroi()
+function plotroi(x::AbstractArray, roi::CartesianIndices;
+    fill = false,
+    value = 1.2maximum(x),
+    kwargs...
+)
 
+    # Compute the number of dimensions of x
+    N = ndims(x)
 
+    # Make sure the dimensions of x and roi match
+    if length(roi[1]) != N
+        throw(DimensionMismatch("x has dimension $N, roi has dimension $(length(roi[1]))"))
+    end
+
+    # Copy x to avoid overwriting values in x
+    xcopy = copy(x)
+
+    # Replace the values of xcopy in the ROI with the given value for easy visualization
+    if fill
+        xcopy[roi] .= value
+    else
+        s = size(roi)
+        for d = 1:N
+            xcopy[roi[CartesianIndex(ones(d-1)...),:,CartesianIndex(ones(N-d)...)]] .= value
+            xcopy[roi[CartesianIndex(s[1:d-1]),:,CartesianIndex(s[d+1:end])]] .= value
+        end
+    end
+
+    # Return a plot of x with the ROI clearly distinguished
+    return myplot(xcopy; kwargs...)
 
 end
 
