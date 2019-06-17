@@ -1,7 +1,7 @@
 module Utils
 
-using Plots: plot, heatmap, backend, plotly
-using ImageSegmentation: seeded_region_growing, labels_map
+using Plots: plot, heatmap, backend, plotly, Gray
+using ImageSegmentation: seeded_region_growing
 
 include("plots.jl")
 
