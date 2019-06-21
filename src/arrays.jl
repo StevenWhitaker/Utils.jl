@@ -19,7 +19,7 @@ assigned the value `v`. If `T` is `typeof(v)`, use `Base.fill` instead.
 # Return
 - `arr::Array{T,length(dims)}`: Array filled with value `v`
 """
-myfill(::Type{T}, v::Number, dims...) where T<:Number = fill(convert(T, v), dims...)
+myfill(::Type{T}, v::Number, dims...) where {T<:Number} = fill(convert(T, v), dims...)
 
 function myfill(test::Symbol)
 
@@ -55,7 +55,7 @@ Create an array `arr` (optionally of type `T`) of size `size(mask)`, where
 
 # Arguments
 - `T::Type = eltype(x)`: Type of elements of the array
-- `mask::Union{<:BitArray,<:AbstractArray{Bool}}`: Mask
+- `mask::AbstractArray{Bool}`: Mask
 - `x`: Values to embed into the array
 - `bgval = T <: Number ? zero(T) : nothing`: Values of array that are outside
     the mask
@@ -64,12 +64,12 @@ Create an array `arr` (optionally of type `T`) of size `size(mask)`, where
 - `arr::Array{T,ndims(mask)}`: Array with values in `mask` specified by `x`
 """
 function embed(::Type{T},
-    mask::Union{<:BitArray,<:AbstractArray{Bool}},
+    mask::AbstractArray{Bool,N},
     x,
     bgval = T <: Number ? zero(T) : nothing
-) where T
+) where {T,N}
 
-    arr = Array{T,ndims(mask)}(undef, size(mask))
+    arr = Array{T,N}(undef, size(mask))
     if !isnothing(bgval)
         arr[.!mask] .= bgval
     end
