@@ -158,3 +158,38 @@ function embed(test::Symbol)
     end
 
 end
+
+"""
+Author: Steven Whitaker
+
+Institution: University of Michigan
+
+Date Created: 2019-06-27
+
+
+    squeeze(x)
+
+Drop all singleton dimensions of `x`.
+
+# Arguments
+- `x::AbstractArray`: Input array whose dimensions should be dropped
+
+# Return
+- `arr::AbstractArray`: Array containing the same data as `x` but with no
+    singleton dimensions; note that `arr` is NOT a copy of `x`, i.e., modifying
+    the contents of `arr` will modify the contents of `x`
+"""
+squeeze(x::AbstractArray) = dropdims(x, dims = Tuple(findall(size(x) .== 1)))
+
+function squeeze(test::Symbol)
+
+    if test == :a1
+
+        x = rand(1,3,1,5,6,1,2,1,2,3,1)
+        y = squeeze(x)
+        @assert x[:] == y[:]
+        size(y)
+
+    end
+
+end

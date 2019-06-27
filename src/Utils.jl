@@ -7,6 +7,6 @@ include("plots.jl")
 include("arrays.jl")
 
 export myplot, iplot, getroi, plotroi, segment
-export myfill, embed
+export myfill, embed, squeeze
 
 end
