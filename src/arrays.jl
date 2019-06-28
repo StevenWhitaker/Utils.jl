@@ -169,7 +169,13 @@ Date Created: 2019-06-27
 
     squeeze(x)
 
-Drop all singleton dimensions of `x`.
+Drop all singleton dimensions of `x`. Caution: This is not type stable; see
+[this post](https://stackoverflow.com/questions/52505760/dropping-singleton-dimensions-in-julia).
+Also, if `x` contains only one element (i.e., all of its dimensions are
+singletons) then the output will be a zero-dimensional array. Only use this
+function if you are sure you are not removing important dimensions and if you
+don't care about type stability. For a type-stable version, see
+[`@squeeze`](@ref), which is recommended to use.
 
 # Arguments
 - `x::AbstractArray`: Input array whose dimensions should be dropped
@@ -181,6 +187,57 @@ Drop all singleton dimensions of `x`.
 """
 squeeze(x::AbstractArray) = dropdims(x, dims = Tuple(findall(size(x) .== 1)))
 
+"""
+Author: Steven Whitaker
+
+Institution: University of Michigan
+
+Date Created: 2019-06-27
+
+
+    @squeeze ex
+
+Evaluate the expression `ex` (which is of the form `fun(args...; kwargs...)`,
+where `dims` is in `kwargs`) and drop the resulting singleton dimensions
+specified by `dims`. Note that `dims` must be explicitly passed; it cannot be
+splatted.
+
+# Arguments
+- `ex`: Expression to evaluate and whose result to squeeze
+
+# Return
+- `result`: Result of evaluating `ex` and squeezing the resulting singleton
+    dimensions
+
+# Examples
+```jldoctest
+julia> @squeeze sum(ones(3, 3), dims = 2)
+3-element Array{Float64,1}:
+ 3.0
+ 3.0
+ 3.0
+
+julia> @squeeze mapslices(sum, ones(3,4,5), dims = (1,2))
+5-element Array{Float64,1}:
+ 12.0
+ 12.0
+ 12.0
+ 12.0
+ 12.0
+```
+"""
+macro squeeze(ex)
+
+    # $(esc(dropdims)) is to make sure to call dropdims from the caller's
+    # context (this is the case for all instances of $(esc(...)))
+    # This code searches for the last occurrence of an expression whose first
+    # arg is :dims, so hopefully the only such possibility is a keyword
+    # argument dims (notably, if a function dims has been defined, that could
+    # be a candidate, but I don't think that is likely)
+    return :($(esc(dropdims))($(esc(ex)), $(esc(ex.args[findlast(x -> x isa Expr && x.args[1] == :dims, ex.args)]))))
+
+end
+
 function squeeze(test::Symbol)
 
     if test == :a1
@@ -189,6 +246,28 @@ function squeeze(test::Symbol)
         y = squeeze(x)
         @assert x[:] == y[:]
         size(y)
+
+    elseif test == :m1
+
+        x = ones(3,3)
+        display(@macroexpand @squeeze sum(x, dims = 2))
+        @squeeze(sum(x, dims = 2))
+
+    elseif test == :m2
+
+        display(@macroexpand @squeeze sum(ones(3,3), dims = 2))
+        @squeeze sum(ones(3,3), dims = 2)
+
+    elseif test == :m3
+
+        display(@macroexpand @squeeze mapslices(x -> sum(x), ones(3,4,5), dims = (1,2)))
+        @squeeze mapslices(x -> sum(x), ones(3,4,5), dims = (1,2))
+
+    elseif test == :m4
+
+        x = ones(3,3)
+        display(@macroexpand @squeeze sum(dims = 2, x))
+        @squeeze(sum(dims = 2, x))
 
     end
 
