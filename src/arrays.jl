@@ -62,6 +62,22 @@ Create an array `arr` (optionally of type `T`) of size `size(mask)`, where
 
 # Return
 - `arr::Array{T,ndims(mask)}`: Array with values in `mask` specified by `x`
+
+# Examples
+```jldoctest
+julia> embed([true, false, true, true, false], [1, 2, 3])
+5-element Array{Int64,1}:
+ 1
+ 0
+ 2
+ 3
+ 0
+
+julia> embed(ComplexF64, [false false; true true], [1, 2], 100)
+2×2 Array{Complex{Float64},2}:
+ 100.0+0.0im  100.0+0.0im
+   1.0+0.0im    2.0+0.0im
+```
 """
 function embed(::Type{T},
     mask::AbstractArray{Bool,N},
