@@ -242,7 +242,7 @@ julia> @squeeze mapslices(sum, ones(3,4,5), dims = (1,2))
  12.0
 ```
 """
-macro squeeze(ex)
+macro squeeze(ex::Expr)
 
     # $(esc(dropdims)) is to make sure to call dropdims from the caller's
     # context (this is the case for all instances of $(esc(...)))
@@ -284,6 +284,19 @@ function squeeze(test::Symbol)
         x = ones(3,3)
         display(@macroexpand @squeeze sum(dims = 2, x))
         @squeeze(sum(dims = 2, x))
+
+    elseif test == :m5
+
+        x = [1 2 3; 4 5 6; 7 8 9]
+        f = (z; dims) -> mapslices(maximum, z, dims = dims)
+        display(@macroexpand @squeeze f(x, dims = 1))
+        @squeeze f(x, dims = 1)
+
+    elseif test == :m6
+
+        x = [1 2 3; 4 5 6; 7 8 9]
+        display(@macroexpand @squeeze ((z; dims) -> mapslices(maximum, z, dims = dims))(x, dims = 1))
+        @squeeze ((z; dims) -> mapslices(maximum, z, dims = dims))(x, dims = 1)
 
     end
 
