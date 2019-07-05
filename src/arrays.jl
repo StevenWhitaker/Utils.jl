@@ -1,11 +1,4 @@
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-21
-
-
     myfill(T, v, dims...)
 
 Create an array of type `T` of the given dimensions where each element is
@@ -40,13 +33,6 @@ function myfill(test::Symbol)
 end
 
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-21
-
-
     embed([T,] mask, x [, bgval])
 
 Create an array `arr` (optionally of type `T`) of size `size(mask)`, where
@@ -176,13 +162,6 @@ function embed(test::Symbol)
 end
 
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-27
-
-
     squeeze(x)
 
 Drop all singleton dimensions of `x`. Caution: This is not type stable; see
@@ -204,13 +183,6 @@ don't care about type stability. For a type-stable version, see
 squeeze(x::AbstractArray) = dropdims(x, dims = Tuple(findall(size(x) .== 1)))
 
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-27
-
-
     @squeeze ex
 
 Evaluate the expression `ex` (which is of the form `fun(args...; kwargs...)`,

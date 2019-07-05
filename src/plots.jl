@@ -1,11 +1,4 @@
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-14
-
-
     myplot([idx,] x; kwargs...)
 
 Create plot of `x` with preferred default values.
@@ -35,13 +28,6 @@ function myplot(x::AbstractArray{<:Union{<:Real,<:AbstractArray{<:Real,1}},1};
 end
 
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-14
-
-
     myplot([x, y,] img; kwargs...)
 
 Create image of `img` with preferred default values.
@@ -77,13 +63,6 @@ function myplot(img::AbstractArray{<:Real,2};
 end
 
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-14
-
-
     myplot([x, y, z], img; combine, ncols, npad, kwargs...)
 
 Create image of 3D `img` with preferred default values.
@@ -217,13 +196,6 @@ function myplot(test::Symbol)
 end
 
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-14
-
-
     iplot(...)
 
 Create an interactive plot, i.e., one in which the user can interactively
@@ -255,13 +227,6 @@ function iplot(args...; kwargs...)
 end
 
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-14
-
-
     getroi(x)
 
 Get the index for a rectangular region of interest (ROI) of `x`.
@@ -320,13 +285,6 @@ function getroi(test::Symbol)
 end
 
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-14
-
-
     getuserinput(f)
 
 Get input from the user.
@@ -358,13 +316,6 @@ function getuserinput(f::Function)
 end
 
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-17
-
-
     plotroi(x, roi; fill, value, kwargs)
 
 Display the given region of interest `roi` of `x`.
@@ -434,13 +385,6 @@ function plotroi(test::Symbol)
 end
 
 """
-Author: Steven Whitaker
-
-Institution: University of Michigan
-
-Date Created: 2019-06-17
-
-
     segment(img; show)
 
 Segment the given image `img`.
