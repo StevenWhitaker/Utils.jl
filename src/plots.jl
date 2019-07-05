@@ -147,6 +147,8 @@ function myplot(x::Union{<:AbstractArray{<:Union{<:Complex,<:AbstractArray{<:Com
 
 end
 
+myplot(p::Plots.Plot{<:AbstractBackend}...; kwargs...) = plot(p...; kwargs...)
+
 function myplot(test::Symbol)
 
     if test == :test1d1
@@ -202,7 +204,7 @@ Create an interactive plot, i.e., one in which the user can interactively
 inspect values at indexes of interest.
 
 # Arguments
-All arguments are passed to `Plots.plot`.
+All arguments are passed to `myplot`.
 
 # Return
 - `p::Plots.Plot{Plots.PlotlyBackend}`: Plot handle
@@ -216,7 +218,7 @@ function iplot(args...; kwargs...)
     plotly()
 
     # Create the plot
-    p = plot(args...; kwargs...)
+    p = myplot(args...; kwargs...)
 
     # Restore the previous backend
     backend(cur)
@@ -240,7 +242,7 @@ Get the index for a rectangular region of interest (ROI) of `x`.
 function getroi(x::AbstractArray)
 
     # Display x
-    display(iplot(myplot(x)))
+    display(iplot(x))
 
     # Compute number of dimensions of x
     N = ndims(x)
@@ -399,7 +401,7 @@ Segment the given image `img`.
 function segment(img::AbstractArray{<:Any,2}; show = false)
 
     # Display img
-    display(iplot(myplot(img)))
+    display(iplot(img))
 
     # Create function to parse user input
     f = input -> begin

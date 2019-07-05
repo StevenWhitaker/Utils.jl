@@ -1,6 +1,6 @@
 module Utils
 
-using Plots: plot, heatmap, backend, plotly, Gray
+using Plots: plot, heatmap, backend, plotly, Gray, AbstractBackend
 using ImageSegmentation: seeded_region_growing
 
 include("plots.jl")
