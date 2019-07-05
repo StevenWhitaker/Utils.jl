@@ -11,19 +11,56 @@ Create plot of `x` with preferred default values.
 # Return
 - `p::Plots.Plot{<:AbstractBackend}`: Plot handle
 """
-function myplot(x::AbstractArray{<:Union{<:Real,<:AbstractArray{<:Real,1}},1};
-    idx = x[1] isa Real ? (1:length(x)) : [1:length(x[i]) for i = 1:length(x)],
-    label = x[1] isa Real ? "" : ["$i" for i = 1:length(x)],
-    line = (:dash, 2.5),
-    marker = (:circle, 7),
+function myplot(x::AbstractArray{<:Real,1};
+    idx = 1:length(x),
+    label = "",
+    linewidth = 2.5,
     kwargs...
 )
 
     return plot(idx, x,
                 label = label,
-                line = line,
-                marker = marker;
+                linewidth = linewidth;
                 kwargs...)
+
+end
+
+function myplot(x::AbstractArray{<:AbstractArray{<:Number,1},1};
+    idx = [1:length(x[i]) for i = 1:length(x)],
+    label = 1:length(x),
+    kwargs...
+)
+
+    p = myplot(x[1],
+               idx = idx[1],
+               label = label[1];
+               kwargs...)
+    for i = 2:length(x)
+        myplot!(p, x[2],
+                idx = idx[min(i, length(idx))],
+                label = label[min(i, length(label))];
+                kwargs...)
+    end
+    return p
+
+end
+
+"""
+    myplot!(p, [idx,] x; kwargs...)
+
+Add the 1D data `x` to the given plot.
+"""
+function myplot!(p::Plots.Plot{<:AbstractBackend}, x::AbstractArray{<:Real,1};
+    idx = 1:length(x),
+    label = "",
+    linewidth = 2.5,
+    kwargs...
+)
+
+    plot!(p, idx, x,
+          label = label,
+          linewidth = linewidth;
+          kwargs...)
 
 end
 
@@ -87,7 +124,7 @@ function myplot(img::AbstractArray{<:Real,3};
     y = 1:size(img,2),
     z = 1:size(img,3),
     combine = true,
-    ncols = Int(floor(sqrt(length(z)))),
+    ncols = floor(Int, sqrt(length(z))),
     npad = 1,
     xlabel = combine ? "" : ["z = $i" for i in z],
     clims = combine ? (minimum(img), maximum(img)) : [(minimum(img[:,:,iz]), maximum(img[:,:,iz])) for iz = 1:size(img,3)],
@@ -134,16 +171,22 @@ function myplot(img::AbstractArray{<:Real,3};
 end
 
 myplot(idx, x; kwargs...) = myplot(x, idx = idx; kwargs...)
-
+myplot!(p, idx, x; kwargs...) = myplot!(p, x, idx = idx; kwargs...)
 myplot(x, y, img; kwargs...) = myplot(img, x = x, y = y; kwargs...)
-
 myplot(x, y, z, img; kwargs...) = myplot(img, x = x, y = y, z = z; kwargs...)
 
-function myplot(x::Union{<:AbstractArray{<:Union{<:Complex,<:AbstractArray{<:Complex,1}},1},
-                         <:AbstractArray{<:Complex,2}, <:AbstractArray{<:Complex,3}}; kwargs...)
+function myplot(x::Union{<:AbstractArray{<:Complex,1}, <:AbstractArray{<:Complex,2},
+                <:AbstractArray{<:Complex,3}}; kwargs...)
 
     @warn("taking magnitude of complex input")
     myplot(map(z -> abs.(z), x); kwargs...)
+
+end
+
+function myplot!(p::Plots.Plot{<:AbstractBackend}, x::AbstractArray{<:Complex,1}; kwargs...)
+
+    @warn("taking magnitude of complex input")
+    myplot!(p, abs.(x); kwargs...)
 
 end
 
