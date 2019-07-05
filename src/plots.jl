@@ -255,7 +255,7 @@ Create a scatter plot with preferred default values.
 """
 function myscatter(x::AbstractArray{<:Real,1}, y::AbstractArray{<:Real,1};
     label = "",
-    markersize = 7,
+    markersize = 5,
     kwargs...
 )
 
@@ -292,7 +292,7 @@ Add scatter plot data to the given plot.
 function myscatter!(p::Plots.Plot{<:AbstractBackend},
     x::AbstractArray{<:Real,1}, y::AbstractArray{<:Real,1};
     label = "",
-    markersize = 7,
+    markersize = 5,
     kwargs...
 )
 
