@@ -322,6 +322,72 @@ function myscatter(test::Symbol)
 end
 
 """
+    myhist(x; kwargs...)
+
+Create a histogram.
+
+# Arguments
+- `x::AbstractArray{<:Real,1}`: Data to display
+- `kwargs...`: Keyword arguments passed to `Plots.histogram`
+
+# Return
+- `p::Plots.Plot{<:AbstractBackend}`: Plot handle
+"""
+function myhist(x::AbstractArray{<:Real,1};
+    label = "",
+    kwargs...
+)
+
+    return histogram(x,
+                     label = label;
+                     kwargs...)
+
+end
+
+"""
+    myhist(x, y; kwargs...)
+
+Create a 2D histogram.
+
+# Arguments
+- `x::AbstractArray{<:Real,1}`: x values of data
+- `y::AbstractArray{<:Real,1}`: y values of data
+- `kwargs...`: Keyword arguments passed to `Plots.histogram`
+
+# Return
+- `p::Plots.Plot{<:AbstractBackend}`: Plot handle
+"""
+function myhist(x::AbstractArray{<:Real,1}, y::AbstractArray{<:Real,1};
+    color = :kdc,
+    aspect_ratio = :equal,
+    kwargs...
+)
+
+    return histogram2d(x, y,
+                       color = color,
+                       aspect_ratio = aspect_ratio;
+                       kwargs...)
+
+end
+
+function myhist(test::Symbol)
+
+    if test == :test1d1
+
+        x = randn(10000)
+        display(myhist(x))
+
+    elseif test == :test2d1
+
+        x = 2randn(10000)
+        y = randn(10000)
+        display(myhist(x, y))
+
+    end
+
+end
+
+"""
     iplot(...)
 
 Create an interactive plot, i.e., one in which the user can interactively
