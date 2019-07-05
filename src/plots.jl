@@ -241,6 +241,87 @@ function myplot(test::Symbol)
 end
 
 """
+    myscatter(x, y; kwargs...)
+
+Create a scatter plot with preferred default values.
+
+# Arguments
+- `x::AbstractArray{<:Union{<:Real,AbstractArray{<:Real,1}},1}`: x coordinates of data points
+- `y::AbstractArray{<:Union{<:Real,AbstractArray{<:Real,1}},1}`: y coordinates of data points
+- `kwargs...`: Keyword arguments passed to `Plots.scatter`
+
+# Return
+- `p::Plots.Plot{<:AbstractBackend}`: Plot handle
+"""
+function myscatter(x::AbstractArray{<:Real,1}, y::AbstractArray{<:Real,1};
+    label = "",
+    markersize = 7,
+    kwargs...
+)
+
+    return scatter(x, y,
+                   label = label,
+                   markersize = markersize;
+                   kwargs...)
+
+end
+
+function myscatter(x::AbstractArray{<:AbstractArray{<:Real,1},1},
+    y::AbstractArray{<:AbstractArray{<:Real,1},1};
+    label = 1:length(x),
+    kwargs...
+)
+
+    p = myscatter(x[1], y[1],
+                  label = label[1];
+                  kwargs...)
+    for i = 2:length(x)
+        myscatter!(p, x[i], y[i],
+                   label = label[min(i, length(label))];
+                   kwargs...)
+    end
+    return p
+
+end
+
+"""
+    myscatter!(p, x, y; kwargs...)
+
+Add scatter plot data to the given plot.
+"""
+function myscatter!(p::Plots.Plot{<:AbstractBackend},
+    x::AbstractArray{<:Real,1}, y::AbstractArray{<:Real,1};
+    label = "",
+    markersize = 7,
+    kwargs...
+)
+
+    scatter!(p, x, y,
+             label = label,
+             markersize = markersize;
+             kwargs...)
+
+end
+
+function myscatter(test::Symbol)
+
+    if test == :test1
+
+        x = rand(30)
+        y = rand(30)
+        display(myscatter(x, y))
+
+    elseif test == :test2
+
+        x = [rand(30), randn(10)]
+        y = [rand(30), randn(10)]
+        display(myscatter(x, y))
+
+    end
+
+end
+
+"""
     iplot(...)
 
 Create an interactive plot, i.e., one in which the user can interactively
