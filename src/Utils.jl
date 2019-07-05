@@ -1,8 +1,7 @@
 module Utils
 
-using Plots: plot, plot!, scatter, scatter!, heatmap, histogram, histogram2d,
-             backend, plotly, Gray, AbstractBackend
-using ImageSegmentation: seeded_region_growing
+using Plots
+using ImageSegmentation
 
 include("plots.jl")
 include("arrays.jl")
