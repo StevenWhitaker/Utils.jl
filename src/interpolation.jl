@@ -1,12 +1,80 @@
 """
-    Interpolator
+    AbstractSpacing <: AbstractArray
+
+Abstract type for describing the spacing of data points.
+"""
+abstract type AbstractSpacing{T,N} <: AbstractArray{T,N} end
+
+"""
+    AbstractGridSpacing <: AbstractSpacing
+
+Abstract type for describing data points that lie on a grid.
+"""
+abstract type AbstractGridSpacing{T} <: AbstractSpacing{T,1} end
+
+"""
+    AbstractConstantSpacing <: AbstractGridSpacing
+
+Abstract type for describing equally spaced data points.
+"""
+abstract type AbstractConstantSpacing <: AbstractGridSpacing end
+
+"""
+    UnitSpacing(first, last) <: AbstractConstantSpacing
+
+Spacing between data points is constant and equal to one.
+
+# Properties
+- `first::Number`: Position of first data point
+- `last::Number`: Position of last data point
+"""
+struct UnitSpacing{T<:Number} <: AbstractConstantSpacing
+    first::T
+    last::T
+
+    UnitSpacing(first::T, last::T) where {T<:Number} = begin
+        first <= last || throw(ArgumentError("must have first <= last"))
+        (last - first) % 1 == 0 || throw(ArgumentError("difference between last and first must be an integer"))
+        new{T}(first, last)
+    end
+end
+# TODO: Add constructor and conversion from UnitRange
+
+"""
+    ConstantSpacing(first, last, step) <: AbstractConstantSpacing
+
+Spacing between data points is constant.
+
+# Properties
+- `first::Number`: Position of first data point
+- `last::Number`: Position of last data point
+- `step::Number`: Distance between adjacent data points
+"""
+struct ConstantSpacing{T<:Number,S<:Number} <: AbstractConstantSpacing
+    first::T
+    last::T
+    step::S
+
+    ConstantSpacing(first::T, last::T, step::S) where {T<:Number,S<:Number} = begin
+        first <= last || throw(ArgumentError("must have first <= last"))
+        (last - first) % step == 0 || throw(ArgumentError("difference between last and first must be a multiple of step"))
+        new{T,S}(first, last, step)
+    end
+end
+
+ConstantSpacing(first::Number, last::Number; nsteps::Integer) =
+    ConstantSpacing(promote(first, last)..., (last - first) / nsteps)
+# TODO: Add contructor and conversion from LinRange and Range (AbstractRange) objects
+
+"""
+    AbstractInterpolator
 
 Abstract type for describing interpolators.
 """
-abstract type Interpolator end
+abstract type AbstractInterpolator end
 
 """
-    NearestInterpolator([pos, ]val) <: Interpolator
+    NearestInterpolator([pos, ]val) <: AbstractInterpolator
 
 Create a nearest-neighbor interpolator.
 
@@ -17,7 +85,7 @@ Create a nearest-neighbor interpolator.
     traditional 1-based indexing, i.e., `pos[i...] == i`
 - `val::Array`: Values from which to interpolate
 """
-struct NearestInterpolator{T,P<:AbstractArray{<:AbstractArray{<:Any,1},1},N} <: Interpolator
+struct NearestInterpolator{T,P<:AbstractArray{<:AbstractArray{<:Any,1},1},N} <: AbstractInterpolator
     val::Array{T,N}
     pos::P
 
