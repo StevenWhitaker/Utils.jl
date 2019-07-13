@@ -53,10 +53,8 @@ end
 Base.getindex(spacing::UnitSpacing, I::AbstractArray{Int,1}) =
     [getindex(spacing, i) for i in I]
 Base.IndexStyle(::Type{<:UnitSpacing}) = IndexLinear()
-Base.show(io::IO, spacing::UnitSpacing) =
-    print(io, spacing.first, ":", spacing.last)
-Base.show(io::IO, ::MIME"text/plain", spacing::UnitSpacing{T}) where {T} =
-    print(io, "UnitSpacing{$T}: ", spacing)
+Base.show(io::IO, spacing::UnitSpacing{T}) where {T} =
+    print(io, "UnitSpacing{$T}: ", spacing.first, ":", spacing.last)
 
 # Not sure adding them makes sense, but I'll leave the code here just in case
 # Base.:+(spacing1::UnitSpacing, spacing2::UnitSpacing) = begin
@@ -119,14 +117,10 @@ Base.getindex(spacing::ConstantSpacing, I::AbstractArray{Int,1}) =
     [getindex(spacing, i) for i in I]
 Base.IndexStyle(::Type{<:ConstantSpacing}) = IndexLinear()
 Base.eltype(::ConstantSpacing{Base.TwicePrecision{Float64}}) = Float64
-Base.show(io::IO, spacing::ConstantSpacing) =
-    print(io, spacing.first, ":", spacing.step, ":", spacing.last)
+Base.show(io::IO, spacing::ConstantSpacing{T}) where {T} =
+    print(io, "ConstantSpacing{$T}: ", spacing.first, ":", spacing.step, ":", spacing.last)
 Base.show(io::IO, spacing::ConstantSpacing{Base.TwicePrecision{Float64}}) =
-    print(io::IO, Float64(spacing.first), ":", Float64(spacing.step), ":", Float64(spacing.last))
-Base.show(io::IO, ::MIME"text/plain", spacing::ConstantSpacing{T}) where {T} =
-    print(io, "ConstantSpacing{$T}: ", spacing)
-Base.show(io::IO, ::MIME"text/plain", spacing::ConstantSpacing{Base.TwicePrecision{Float64}}) =
-    print(io, "ConstantSpacing{Float64}: ", spacing)
+    print(io::IO, "ConstantSpacing{Float64}: ", Float64(spacing.first), ":", Float64(spacing.step), ":", Float64(spacing.last))
 
 """
     VariableSpacing(spacing) <: AbstractGridSpacing
@@ -212,7 +206,56 @@ Find the nearest data point to the given position.
 """
 function (interp::NearestInterpolator{T,S,N})(pos::Vararg{Any,N}) where {T,S,N}
 
-    index = findclosest(interp.spacing, pos)
+    index = findclosest(interp.spacing, pos...)
     return interp.data[index]
+
+end
+
+"""
+    findclosest(spacing, pos[, num])
+
+Find the index(es) of the `num` points closest to `pos`.
+
+# Arguments
+- `spacing::AbstractSpacing`: Spacing object
+- `pos`: Position to find points close to
+- `num::Integer = 1`: Find the closes `num` points
+"""
+function findclosest(spacing::AbstractGridSpacing, pos)
+
+    # The first two branches implement extrapolation
+    if pos <= spacing[1]
+        return 1
+    elseif pos >= spacing[end]
+        return length(spacing)
+    else
+        return _findclosest(spacing, pos)
+    end
+
+end
+
+function findclosest(spacing::AbstractGridSpacing, pos::AbstractArray)
+
+    return [findclosest(spacing, p) for p in pos]
+
+end
+
+function _findclosest(spacing::UnitSpacing, pos)
+
+    return round(Int, pos - spacing.first + 1, RoundNearestTiesUp)
+
+end
+
+# I need this function because in this case (pos - spacing.first) is an Integer,
+# and round(...) does not accept a rounding mode when rounding Integers
+function _findclosest(spacing::UnitSpacing{<:Integer}, pos::Integer)
+
+    return pos - spacing.first + 1
+
+end
+
+function _findclosest(spacing::ConstantSpacing, pos)
+
+    return round(Int, (pos - spacing.first) / spacing.step + 1, RoundNearestTiesUp)
 
 end
