@@ -17,7 +17,7 @@ abstract type AbstractGridSpacing{T} <: AbstractSpacing{T,1} end
 
 Abstract type for describing equally spaced data points.
 """
-abstract type AbstractConstantSpacing <: AbstractGridSpacing end
+abstract type AbstractConstantSpacing{T} <: AbstractGridSpacing{T} end
 
 """
     UnitSpacing(first, last) <: AbstractConstantSpacing
@@ -28,7 +28,7 @@ Spacing between data points is constant and equal to one.
 - `first::Number`: Position of first data point
 - `last::Number`: Position of last data point
 """
-struct UnitSpacing{T<:Number} <: AbstractConstantSpacing
+struct UnitSpacing{T<:Number} <: AbstractConstantSpacing{T}
     first::T
     last::T
 
@@ -40,6 +40,16 @@ struct UnitSpacing{T<:Number} <: AbstractConstantSpacing
 end
 # TODO: Add constructor and conversion from UnitRange
 
+Base.size(pos::UnitSpacing) = (Int(pos.last - pos.first) + 1,)
+Base.getindex(pos::UnitSpacing, i::Int) = begin
+    1 <= i <= length(pos) || throw(BoundsError(pos, i))
+    pos.first + i - 1
+end
+Base.IndexStyle(::Type{<:UnitSpacing}) = IndexLinear()
+Base.show(io::IO, pos::UnitSpacing) = print(io, pos.first, ":", pos.last)
+Base.show(io::IO, ::MIME"text/plain", pos::UnitSpacing{T}) where {T} =
+    print(io, "UnitSpacing{$T} ", pos)
+
 """
     ConstantSpacing(first, last, step) <: AbstractConstantSpacing
 
@@ -50,7 +60,7 @@ Spacing between data points is constant.
 - `last::Number`: Position of last data point
 - `step::Number`: Distance between adjacent data points
 """
-struct ConstantSpacing{T<:Number,S<:Number} <: AbstractConstantSpacing
+struct ConstantSpacing{T<:Number,S<:Number} <: AbstractConstantSpacing{T}
     first::T
     last::T
     step::S
