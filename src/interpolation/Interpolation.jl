@@ -11,8 +11,9 @@ Abstract type for describing interpolators.
 abstract type AbstractInterpolator{T,S<:SpacingTypes,N} end
 
 include("nearestneighbor.jl")
+include("linear.jl")
 
 export UnitSpacing, ConstantSpacing, VariableSpacing
-export NearestInterpolator
+export NearestInterpolator, LinearInterpolator
 
 end

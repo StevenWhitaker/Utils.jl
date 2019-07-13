@@ -28,6 +28,7 @@ NearestInterpolator(data::AbstractArray, spacing::SpacingTypes) =
     NearestInterpolator(convert(Array, data), spacing)
 NearestInterpolator(data::AbstractArray) =
     NearestInterpolator(convert(Array, data))
+# TODO: Add constructor and conversion from ranges
 
 Base.show(io::IO, interp::NearestInterpolator{T,S,N}) where {T,S,N} =
     print(io, "NearestInterpolator{$T,$S,$N}:\n  data = ", interp.data, "\n  spacing = ", interp.spacing)
@@ -37,7 +38,7 @@ Base.show(io::IO, interp::NearestInterpolator{T,S,N}) where {T,S,N} =
 
 Find the nearest data point to the given position.
 """
-function (interp::NearestInterpolator{T,S,N})(pos::Vararg{Any,N}) where {T,S,N}
+function (interp::NearestInterpolator{T,S,N})(pos::Vararg{<:Any,N}) where {T,S,N}
 
     index = findclosest(interp.spacing, pos...)
     return interp.data[index]
@@ -45,15 +46,21 @@ function (interp::NearestInterpolator{T,S,N})(pos::Vararg{Any,N}) where {T,S,N}
 end
 
 """
-    findclosest(spacing, pos[, num])
+    findclosest(spacing, pos)
 
-Find the index(es) of the `num` points closest to `pos`. Ties round up.
+Find the index of the point closest to `pos`. Ties round up.
 
 # Arguments
 - `spacing::AbstractSpacing`: Spacing object
 - `pos`: Position to find points close to
 - `num::Integer = 1`: Find the closes `num` points
 """
+function findclosest(spacing::Tuple{Vararg{<:AbstractGridSpacing,N}}, pos::Vararg{<:Any,N}) where {N}
+
+    return CartesianIndex([findclosest(spacing[n], pos[n]) for n = 1:N]...)
+
+end
+
 function findclosest(spacing::AbstractGridSpacing, pos)
 
     # The first two branches implement extrapolation
