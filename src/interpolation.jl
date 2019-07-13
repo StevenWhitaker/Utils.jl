@@ -214,7 +214,7 @@ end
 """
     findclosest(spacing, pos[, num])
 
-Find the index(es) of the `num` points closest to `pos`.
+Find the index(es) of the `num` points closest to `pos`. Ties round up.
 
 # Arguments
 - `spacing::AbstractSpacing`: Spacing object
@@ -257,5 +257,14 @@ end
 function _findclosest(spacing::ConstantSpacing, pos)
 
     return round(Int, (pos - spacing.first) / spacing.step + 1, RoundNearestTiesUp)
+
+end
+
+function _findclosest(spacing::VariableSpacing, pos)
+
+    index = searchsortedlast(spacing, pos)
+    diffbelow = pos - spacing[index]
+    diffabove = spacing[index+1] - pos
+    return diffbelow < diffabove ? index : index + 1
 
 end
