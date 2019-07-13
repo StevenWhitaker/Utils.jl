@@ -28,11 +28,11 @@ Spacing between data points is constant and equal to one.
 - `first::Number`: Position of first data point
 - `last::Number`: Position of last data point
 """
-struct UnitSpacing{T<:Number} <: AbstractConstantSpacing{T}
+struct UnitSpacing{T} <: AbstractConstantSpacing{T}
     first::T
     last::T
 
-    UnitSpacing{T}(first::T, last::T) where {T<:Number} = begin
+    UnitSpacing{T}(first::T, last::T) where {T} = begin
         first <= last ||
             throw(ArgumentError("must have first <= last"))
         (last - first) % 1 == 0 ||
@@ -40,8 +40,8 @@ struct UnitSpacing{T<:Number} <: AbstractConstantSpacing{T}
         new{T}(first, last)
     end
 end
-UnitSpacing(first::T, last::T) where {T<:Number} = UnitSpacing{T}(first, last)
-UnitSpacing(first::Number, last::Number) = UnitSpacing(promote(first, last)...)
+UnitSpacing(first::T, last::T) where {T} = UnitSpacing{T}(first, last)
+UnitSpacing(first, last) = UnitSpacing(promote(first, last)...)
 # TODO: Add constructor and conversion from UnitRange
 
 Base.size(pos::UnitSpacing) = (Int(pos.last - pos.first) + 1,)
@@ -51,7 +51,7 @@ Base.getindex(pos::UnitSpacing, i::Int) = begin
     pos.first + i - 1
 end
 Base.getindex(pos::UnitSpacing, I::AbstractArray{Int,1}) =
-    [getindex(pos, I[i]) for i in eachindex(I)]
+    [getindex(pos, i) for i in I]
 Base.IndexStyle(::Type{<:UnitSpacing}) = IndexLinear()
 Base.show(io::IO, pos::UnitSpacing) = print(io, pos.first, ":", pos.last)
 Base.show(io::IO, ::MIME"text/plain", pos::UnitSpacing{T}) where {T} =
@@ -74,25 +74,36 @@ Spacing between data points is constant.
 - `last::Number`: Position of last data point
 - `step::Number`: Distance between adjacent data points
 """
-struct ConstantSpacing{T<:Number,S<:Number} <: AbstractConstantSpacing{T}
+struct ConstantSpacing{T} <: AbstractConstantSpacing{T}
     first::T
     last::T
-    step::S
+    step::T
 
-    ConstantSpacing{T,S}(first::T, last::T, step::S) where {T<:Number,S<:Number} = begin
+    ConstantSpacing{T}(first::T, last::T, step::T) where {T} = begin
         first <= last ||
             throw(ArgumentError("must have first <= last"))
-        (last - first) % step == 0 ||
+        length = (last - first) / step
+        first + step * length == last ||
+        # (last - first) % step == 0 || # % not defined for Base.TwicePrecision{Float64}
             throw(ArgumentError("difference between last and first must be a multiple of step"))
-        new{T,S}(first, last, step)
+        new{T}(first, last, step)
     end
 end
-ConstantSpacing(first::T, last::T, step::S) where{T<:Number,S<:Number} =
-    ConstantSpacing{T,S}(first, last, step)
-ConstantSpacing(first::Number, last::Number, step::Number) =
-    ConstantSpacing(promote(first, last)..., step)
-ConstantSpacing(first::Number, last::Number; nsteps::Integer) =
-    ConstantSpacing(promote(first, last)..., (last - first) / nsteps)
+ConstantSpacing(first::T, last::T, step::T) where {T} =
+    ConstantSpacing{T}(first, last, step)
+ConstantSpacing(first::Float64, last::Float64, step::Float64) = begin
+    # Without Base.TwicePrecision one experiences round-off errors that make
+    # pos[end] != pos.last
+    # Still, though, 3 * 0.1 != 0.3 == prevfloat(3 * 0.1), even with TwicePrecision...
+    T = Base.TwicePrecision{Float64}
+    ConstantSpacing(T(first), T(last), T(step))
+end
+ConstantSpacing(first::T, last::T, step::T) where {T<:Union{Float16,Float32}} =
+    ConstantSpacing(Float64(first), Float64(last), Float64(step))
+ConstantSpacing(first, last, step) =
+    ConstantSpacing(promote(first, last, step)...)
+ConstantSpacing(first, last; nsteps::Integer) =
+    ConstantSpacing(first, last, (last - first) / nsteps)
 # TODO: Add contructor and conversion from LinRange and Range (AbstractRange) objects
 
 Base.size(pos::ConstantSpacing) = (Int((pos.last - pos.first) / pos.step) + 1,)
@@ -100,13 +111,20 @@ Base.getindex(pos::ConstantSpacing, i::Int) = begin
     # 1 <= i <= length(pos) || throw(BoundsError(pos, i))
     pos.first + (i - 1) * pos.step
 end
+Base.getindex(pos::ConstantSpacing{Base.TwicePrecision{Float64}}, i::Int) =
+    Float64(pos.first + (i - 1) * pos.step)
 Base.getindex(pos::ConstantSpacing, I::AbstractArray{Int,1}) =
-    [getindex(pos, I[i]) for i in eachindex(I)]
+    [getindex(pos, i) for i in I]
 Base.IndexStyle(::Type{<:ConstantSpacing}) = IndexLinear()
+Base.eltype(::ConstantSpacing{Base.TwicePrecision{Float64}}) = Float64
 Base.show(io::IO, pos::ConstantSpacing) =
     print(io, pos.first, ":", pos.step, ":", pos.last)
-Base.show(io::IO, ::MIME"text/plain", pos::ConstantSpacing{T,S}) where {T,S} =
-    print(io, "ConstantSpacing{$T,$S}: ", pos)
+Base.show(io::IO, pos::ConstantSpacing{Base.TwicePrecision{Float64}}) =
+    print(io::IO, Float64(pos.first), ":", Float64(pos.step), ":", Float64(pos.last))
+Base.show(io::IO, ::MIME"text/plain", pos::ConstantSpacing{T}) where {T} =
+    print(io, "ConstantSpacing{$T}: ", pos)
+Base.show(io::IO, ::MIME"text/plain", pos::ConstantSpacing{Base.TwicePrecision{Float64}}) =
+    print(io, "ConstantSpacing{Float64}: ", pos)
 
 """
     VariableSpacing(pos) <: AbstractGridSpacing
@@ -116,16 +134,16 @@ Spacing between data points is not constant.
 # Properties
 - `pos::Array{<:Number,1}`: Sorted vector containing positions of data points
 """
-struct VariableSpacing{T<:Number} <: AbstractGridSpacing{T}
+struct VariableSpacing{T} <: AbstractGridSpacing{T}
     pos::Array{T,1}
 
-    VariableSpacing{T}(pos::Array{T,1}) where {T<:Number} = begin
+    VariableSpacing{T}(pos::Array{T,1}) where {T} = begin
         issorted(pos) || throw(ArgumentError("position vector must be sorted"))
         new{T}(pos)
     end
 end
-VariableSpacing(pos::Array{T,1}) where {T<:Number} = VariableSpacing{T}(pos)
-VariableSpacing(pos::AbstractArray{<:Number,1}) =
+VariableSpacing(pos::Array{T,1}) where {T} = VariableSpacing{T}(pos)
+VariableSpacing(pos::AbstractArray{<:Any,1}) =
     VariableSpacing(convert(Array, pos))
 
 Base.size(pos::VariableSpacing) = size(pos.pos)
