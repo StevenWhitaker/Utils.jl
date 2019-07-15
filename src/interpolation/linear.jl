@@ -1,4 +1,4 @@
-# FOR DEVELOPMENT ONLY ########################################################################
+# TODO: FOR DEVELOPMENT ONLY ##################################################################
 include("spacing.jl")
 const SpacingTypes = Union{<:AbstractSpacing,<:Tuple{Vararg{<:AbstractGridSpacing}}}
 
@@ -53,9 +53,10 @@ Linearly interpolate the data at the given position.
 """
 function (interp::LinearInterpolator{T,S,N})(pos::Vararg{<:Any,N}) where {T,S,N}
 
-    indexes = findneighbors(interp.spacing, pos...)
-    datapos = getdatapos(interp.spacing, indexes)
-    return linearinterpolation(interp.data[indexes], datapos, pos...)
+    indexes = findneighbors(interp.spacing, pos...) # [2] or [N][2]
+    datapos = getdatapos(interp.spacing, indexes) # [2] or [N][2]
+    data = getdata(interp.data, indexes) # [2] or [2,N]
+    return linearinterpolation(data, datapos, pos...)
 
 end
 
@@ -101,19 +102,37 @@ function getdatapos(spacing::AbstractGridSpacing, indexes::AbstractArray{Int,1})
 
 end
 
-function getdatapos(spacing::Tuple{Vararg{<:AbstractGridSpacing,N}}, indexes::AbstractArray{<:AbstractArray{Int,1},1})
+function getdatapos(spacing::Tuple{Vararg{<:AbstractGridSpacing,N}}, indexes::AbstractArray{<:AbstractArray{Int,1},1}) where {N}
 
-    
+    return [spacing[n][indexes[n]] for n = 1:N]
 
 end
 
-function linearinterpolation(data::AbstractArray{T,N}, datapos::AbstractArray{S,N}, interppos::Vararg{<:Any,N}) where {T,S,N}
+function getdata(data::AbstractArray{<:Any,1}, indexes::AbstractArray{Int,1})
 
-    dataposnew = similar(datapos, size(datapos)[2:end])
+    return data[indexes]
+
+end
+
+function getdata(data::AbstractArray{<:Any,N}, indexes::AbstractArray{<:AbstractArray{Int,1},1}) where {N}
+
+    cartindexes = CartesianIndices(Tuple([indexes[n][1]:indexes[n][2] for n = 1:N]))
+    return data[cartindexes]
+
+end
+
+function linearinterpolation(data::AbstractArray{T,N}, datapos::AbstractArray{<:AbstractArray{S,1},1}, interppos::Vararg{<:Any,N}) where {T,S,N}
+
+    dataposnew = datapos[2:end]
     interpposnew = interppos[2:end]
-    # datanew = similar(data, size(data)[2:end])
-    datanew = [linearinterpolation(data[:,i], datapos[:,i], interppos[1]) for i in eachindex(dataposnew)]
+    datanew = [linearinterpolation(data[:,i], datapos[1], interppos[1]) for i = CartesianIndices(size(data)[2:end])]
     return linearinterpolation(datanew, dataposnew, interpposnew...)
+
+end
+
+function linearinterpolation(data::AbstractArray{T,1}, datapos::AbstractArray{<:AbstractArray{S,1},1}, interppos) where {T,S}
+
+    return linearinterpolation(data, datapos[], interppos)
 
 end
 
