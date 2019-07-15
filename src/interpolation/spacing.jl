@@ -120,7 +120,7 @@ Base.eltype(::ConstantSpacing{Base.TwicePrecision{Float64}}) = Float64
 Base.show(io::IO, spacing::ConstantSpacing{T}) where {T} =
     print(io, "ConstantSpacing{$T}: ", spacing.first, ":", spacing.step, ":", spacing.last)
 Base.show(io::IO, spacing::ConstantSpacing{Base.TwicePrecision{Float64}}) =
-    print(io::IO, "ConstantSpacing{Float64}: ", Float64(spacing.first), ":", Float64(spacing.step), ":", Float64(spacing.last))
+    print(io::IO, "ConstantSpacing{Base.TwicePrecision{Float64}}: ", Float64(spacing.first), ":", Float64(spacing.step), ":", Float64(spacing.last))
 
 """
     VariableSpacing(spacing) <: AbstractGridSpacing

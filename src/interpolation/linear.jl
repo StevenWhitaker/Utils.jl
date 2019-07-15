@@ -66,33 +66,42 @@ function findneighbors(spacing::Tuple{Vararg{<:AbstractGridSpacing,N}}, pos::Var
 
 end
 
-function findneighbors(spacing::UnitSpacing, pos)
+function findneighbors(spacing::AbstractConstantSpacing, pos)
 
-    below = round(Int, pos - spacing.first, RoundNearestTiesUp)
-    return [below, below + 1]
-
-end
-
-# I need this function because in this case (pos - spacing.first) is an Integer,
-# and round(...) does not accept a rounding mode when rounding Integers
-function findneighbors(spacing::UnitSpacing{<:Integer}, pos::Integer)
-
-    below = pos - spacing.first
-    return [below, below + 1]
+    below = findlowerindex(spacing, pos)
+    return pos == spacing.first ? [below + 1, below + 2] : [below, below + 1]
 
 end
 
-function findneighbors(spacing::ConstantSpacing, pos)
+function findneighbors(spacing::ConstantSpacing{Base.TwicePrecision{Float64}}, pos)
 
-    below = round(Int, (pos - spacing.first) / spacing.step, RoundNearestTiesUp)
-    return [below, below + 1]
+    below = findlowerindex(spacing, pos)
+    return ==(promote(pos, spacing.first)...) ? [below + 1, below + 2] : [below, below + 1]
+
+end
+
+function findlowerindex(spacing::UnitSpacing, pos)
+
+    return ceil(Int, pos - spacing.first)
+
+end
+
+function findlowerindex(spacing::ConstantSpacing, pos)
+
+    return ceil(Int, (pos - spacing.first) / spacing.step)
+
+end
+
+function findlowerindex(spacing::ConstantSpacing{Base.TwicePrecision{Float64}}, pos)
+
+    return ceil(Int, Float64((pos - spacing.first) / spacing.step))
 
 end
 
 function findneighbors(spacing::VariableSpacing, pos)
 
     below = searchsortedlast(spacing, pos)
-    return [below, below + 1]
+    return below == length(spacing) && pos <= spacing[end] ? [below - 1, below] : [below, below + 1]
 
 end
 
