@@ -18,6 +18,6 @@ export myfill, embed, @squeeze
 export gd, gpm, lsgd, nnlsgd
 export LogUniform, Delta
 export UnitSpacing, ConstantSpacing, VariableSpacing
-export NearestInterpolator
+export NearestInterpolator, LinearInterpolator
 
 end
