@@ -1,15 +1,3 @@
-# TODO: FOR DEVELOPMENT ONLY ##################################################################
-include("spacing.jl")
-const SpacingTypes = Union{<:AbstractSpacing,<:Tuple{Vararg{<:AbstractGridSpacing}}}
-
-"""
-    AbstractInterpolator
-
-Abstract type for describing interpolators.
-"""
-abstract type AbstractInterpolator{T,S<:SpacingTypes,N} end
-###############################################################################################
-
 """
     LinearInterpolator(data[, spacing]) <: AbstractInterpolator
 
