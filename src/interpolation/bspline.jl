@@ -84,6 +84,17 @@ function (interp::BSplineInterpolator{O,T,S,N})(pos::Vararg{<:Any,N}) where {O,T
 
 end
 
+function prefilter(order::Order, data::AbstractArray{<:Number,N}, bc::BoundaryCondition) where {N}
+
+    f = d -> prefilter(order, d, bc)
+    prefiltdata = mapslices(f, data, dims = 1)
+    for n = 2:N
+        prefiltdata = mapslices(f, prefiltdata, dims = n)
+    end
+    return prefiltdata
+
+end
+
 function prefilter(order::Order, data::AbstractArray{<:Number,1}, bc::BoundaryCondition)
 
     N = length(data)
