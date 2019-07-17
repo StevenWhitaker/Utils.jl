@@ -44,7 +44,7 @@ struct BSplineInterpolator{O<:Order,T<:Number,S<:SpacingTypes,B<:BoundaryConditi
     # TODO: How does B-spline interpolation work with non-gridded data?
     data::Array{T,N}
     spacing::S
-    prefiltdata::Array{T,N}
+    prefiltdata::Array{Float64,N}
 
     BSplineInterpolator{O,T,S,B,N}(data::Array{T,N}, spacing::S) where {O<:Order,T<:Number,S<:SpacingTypes,B<:BoundaryCondition,N} = begin
         (S <: AbstractSpacing ? size(data) == size(spacing) : all([size(data, n) == size(spacing[n], 1) for n = 1:N])) ||
@@ -84,11 +84,11 @@ function (interp::BSplineInterpolator{O,T,S,N})(pos::Vararg{<:Any,N}) where {O,T
 
 end
 
-function prefilter(order::Order, data::AbstractArray{T,1}, bc::BoundaryCondition) where {T<:Number}
+function prefilter(order::Order, data::AbstractArray{<:Number,1}, bc::BoundaryCondition)
 
     N = length(data)
-    y = zeros(T, N)
-    c = zeros(T, N)
+    y = zeros(N)
+    c = zeros(N)
     (ainv, p) = prefilterconst(order)
 
     y[1] = inity(bc, ainv, p, data)
@@ -125,6 +125,7 @@ function inity(::ConstantBC, ainv, p, data)
 
 end
 
+# It looks like assuming periodicity of the signal also makes y periodic
 function inity(::PeriodicBC{K}, ainv, p, data) where {K}
 
     N = length(data)
@@ -137,5 +138,34 @@ function inity(::MirrorBC{K}, ainv, p, data) where {K}
 
     k = 1:min(K, length(data) - 1)
     return ainv * (data[1] + sum(p.^k .* data[k .+ 1]))
+
+end
+
+# I will assume for now that the boundary conditions apply to y and not to data
+# TODO: Check this
+function initc(::ZeroBC, p, y)
+
+    return -p * y[end]
+
+end
+
+function initc(::ConstantBC, p, y)
+
+    return -y[end] / (1 - p)
+
+end
+
+function initc(::PeriodicBC{K}, p, y) where {K}
+
+    k = 1:min(K, length(y))
+    return -p * (y[end] + sum(p.^k .* y[k]))
+
+end
+
+function initc(::MirrorBC{K}, p, y) where {K}
+
+    N = length(y)
+    k = 1:min(K + 1, N)
+    return -sum(p.^k .* y[(N+1) .- k])
 
 end
