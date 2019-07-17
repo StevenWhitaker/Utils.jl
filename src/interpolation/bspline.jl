@@ -42,6 +42,7 @@ Create an interpolator that uses B-splines.
 """
 struct BSplineInterpolator{O<:Order,T<:Number,S<:SpacingTypes,B<:BoundaryCondition,N} <: AbstractInterpolator{T,S,N}
     # TODO: How does B-spline interpolation work with non-gridded data?
+    # TODO: How does B-spline interpolation work with non-uniformly gridded data?
     data::Array{T,N}
     spacing::S
     prefiltdata::Array{Float64,N}
@@ -78,9 +79,35 @@ CubicBSplineInterpolator(args...) = BSplineInterpolator(3, args...)
 Base.show(io::IO, interp::BSplineInterpolator{O,T,S,B,N}) where {O,T,S,B,N} =
     print(io, "BSplineInterpolator{$O,$T,$S,$B,$N}:\n  data = ", interp.data, "\n  spacing = ", interp.spacing)
 
-function (interp::BSplineInterpolator{O,T,S,N})(pos::Vararg{<:Any,N}) where {O,T,S,N}
+function (interp::BSplineInterpolator{O,T,S,N})(pos::Vararg{<:Any,N}) where {O,T,S<:Union{<:AbstractConstantSpacing,<:Tuple{Vararg{<:AbstractConstantSpacing,N}}},N}
 
+    supp = getsupport(O())
+    x = scalepos(interp.spacing, pos...)
+    # Find indexes such that -supp < x - m < supp
 
+end
+
+@inline getsupport(::Order{2}) = 1.5
+@inline getsupport(::Order{3}) = 2
+
+function scalepos(spacing::Tuple{Vararg{<:AbstractConstantSpacing,N}}, pos::Vararg{<:Any,N}) where {N}
+
+    return [scalepos(spacing[i], pos[i]) for i = 1:N]
+
+end
+
+@inline scalepos(::UnitSpacing, pos) = pos
+@inline scalepos(spacing::ConstantSpacing, pos) = pos / spacing.step
+
+function basiskernel(::Order{2}, x::Number)
+
+    return abs(x) <= 0.5 ? 0.75 - x^2 : (0.5 < abs(x) < 1.5 ? 0.5(abs(x) - 1.5)^2 : 0)
+
+end
+
+function basiskernel(::Order{3}, x::Number)
+
+    return abs(x) <= 1 ? 2/3 - x^2 + 0.5abs(x)^3 : (1 < abs(x) < 2 ? (2 - abs(x))^3 / 6 : 0)
 
 end
 
