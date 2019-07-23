@@ -241,7 +241,7 @@ function myplot(test::Symbol)
 end
 
 """
-    myscatter(x, y; kwargs...)
+    myscatter([x, ]y; kwargs...)
 
 Create a scatter plot with preferred default values.
 
@@ -285,7 +285,7 @@ function myscatter(x::AbstractArray{<:AbstractArray{<:Real,1},1},
 end
 
 """
-    myscatter!(p, x, y; kwargs...)
+    myscatter!(p, [x, ]y; kwargs...)
 
 Add scatter plot data to the given plot.
 """
@@ -302,6 +302,10 @@ function myscatter!(p::Plots.Plot{<:AbstractBackend},
              kwargs...)
 
 end
+
+myscatter(y::AbstractArray{<:Real,1}; kwargs...) = myscatter(1:length(y), y; kwargs...)
+myscatter(y::AbstractArray{<:AbstractArray{<:Real,1},1}; kwargs...) = myscatter([1:length(y[i]) for i = 1:length(y)], y; kwargs...)
+myscatter!(p, y; kwargs...) = myscatter!(p, 1:length(y), y; kwargs...)
 
 function myscatter(test::Symbol)
 
