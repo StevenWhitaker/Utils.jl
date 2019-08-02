@@ -85,7 +85,6 @@ function myplot(img::AbstractArray{<:Real,2};
     xticks = [minimum(x), maximum(x)],
     yticks = [minimum(y), maximum(y)],
     aspect_ratio = :equal,
-    yflip = true,
     kwargs...
 )
 
@@ -174,6 +173,7 @@ myplot(idx, x; kwargs...) = myplot(x, idx = idx; kwargs...)
 myplot!(p, idx, x; kwargs...) = myplot!(p, x, idx = idx; kwargs...)
 myplot(x, y, img; kwargs...) = myplot(img, x = x, y = y; kwargs...)
 myplot(x, y, z, img; kwargs...) = myplot(img, x = x, y = y, z = z; kwargs...)
+myplot!(p; kwargs...) = plot!(p; kwargs...)
 
 function myplot(x::Union{<:AbstractArray{<:Complex,1}, <:AbstractArray{<:Complex,2},
                 <:AbstractArray{<:Complex,3}}; kwargs...)
