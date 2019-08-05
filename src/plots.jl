@@ -85,6 +85,7 @@ function myplot(img::AbstractArray{<:Real,2};
     xticks = [minimum(x), maximum(x)],
     yticks = [minimum(y), maximum(y)],
     aspect_ratio = :equal,
+    yflip = true,
     kwargs...
 )
 
@@ -92,7 +93,8 @@ function myplot(img::AbstractArray{<:Real,2};
                    color = color,
                    xticks = xticks,
                    yticks = yticks,
-                   aspect_ratio = aspect_ratio;
+                   aspect_ratio = aspect_ratio,
+                   yflip = yflip;
                    kwargs...)
 
 end
