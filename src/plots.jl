@@ -92,8 +92,7 @@ function myplot(img::AbstractArray{<:Real,2};
                    color = color,
                    xticks = xticks,
                    yticks = yticks,
-                   aspect_ratio = aspect_ratio,
-                   yflip = yflip;
+                   aspect_ratio = aspect_ratio;
                    kwargs...)
 
 end
