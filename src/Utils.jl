@@ -13,7 +13,7 @@ include("interpolation/Interpolation.jl")
 using .Interpolation
 
 export myplot, myplot!, myscatter, myscatter!, myhist, iplot, getroi, plotroi,
-       segment
+       segment, savefig
 export myfill, embed, @squeeze
 export gd, gpm, lsgd, nnlsgd
 export LogUniform, Delta
