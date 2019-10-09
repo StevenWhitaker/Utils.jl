@@ -9,6 +9,7 @@ include("plots.jl")
 include("arrays.jl")
 include("optimization.jl")
 include("distributions.jl")
+include("timing.jl")
 include("interpolation/Interpolation.jl")
 using .Interpolation
 
@@ -17,6 +18,7 @@ export myplot, myplot!, myscatter, myscatter!, myhist, iplot, getroi, plotroi,
 export myfill, embed, @squeeze
 export gd, gpm, lsgd, nnlsgd
 export LogUniform, Delta
+export @mytime
 export UnitSpacing, ConstantSpacing, VariableSpacing
 export NearestInterpolator, LinearInterpolator
 
